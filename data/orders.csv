@@ -1,0 +1,6 @@
+order_id,customer_id,amount_usd,payment_status,due_date
+O9001,C001,2400,overdue,2026-07-01
+O9002,C002,199,paid,2026-07-05
+O9003,C003,5100,overdue,2026-06-28
+O9004,C004,399,paid,2026-07-03
+O9005,C005,99,paid,2026-07-08

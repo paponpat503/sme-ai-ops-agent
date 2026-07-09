@@ -1,0 +1,6 @@
+ticket_id,customer_id,status,priority,days_open,issue
+T1001,C001,open,high,6,Payment integration fails during checkout
+T1002,C003,open,critical,9,CRM workflow automation stopped syncing leads
+T1003,C003,open,medium,3,Invoice export missing tax ID field
+T1004,C004,closed,low,1,User requested password reset
+T1005,C002,open,medium,2,Email template variables not rendering

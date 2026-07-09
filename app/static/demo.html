@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SME AI Ops Agent</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">B2B AI Automation Portfolio Demo</p>
+        <h1>SME AI Ops Agent</h1>
+        <p class="subtitle">RAG + Tool Calling + Structured Outputs + Evaluation</p>
+      </div>
+      <div class="status-strip" aria-label="System capabilities">
+        <span>Deterministic fallback</span>
+        <span>OpenAI-ready</span>
+        <span>MCP tools</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel ask-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Ask Agent</h2>
+            <p>Rank customer risk using CRM records, tickets, payments, notes, and policy retrieval.</p>
+          </div>
+          <button id="run-agent" class="primary-button">Run Agent</button>
+        </div>
+        <textarea id="agent-question" spellcheck="false">Which customers need follow-up today?</textarea>
+        <div id="agent-error" class="error-box" hidden></div>
+      </section>
+
+      <section class="panel metadata-panel">
+        <h2>Run Metadata</h2>
+        <dl class="metadata-grid">
+          <div>
+            <dt>agent_mode</dt>
+            <dd id="meta-mode">-</dd>
+          </div>
+          <div>
+            <dt>provider_used</dt>
+            <dd id="meta-provider">-</dd>
+          </div>
+          <div>
+            <dt>fallback_used</dt>
+            <dd id="meta-fallback">-</dd>
+          </div>
+          <div>
+            <dt>validation_status</dt>
+            <dd id="meta-validation">-</dd>
+          </div>
+          <div>
+            <dt>error</dt>
+            <dd id="meta-error">-</dd>
+          </div>
+          <div>
+            <dt>tools_called</dt>
+            <dd id="meta-tools">-</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="panel response-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Customer Risk Cards</h2>
+            <p id="agent-summary">Run the agent to render structured customer recommendations.</p>
+          </div>
+          <span id="agent-confidence" class="pill muted">confidence</span>
+        </div>
+        <div id="risk-cards" class="risk-list empty-state">
+          No agent response yet.
+        </div>
+      </section>
+
+      <section class="panel trace-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Tool Trace</h2>
+            <p>Planned calls, registry execution results, and compact observation summaries.</p>
+          </div>
+          <span id="trace-count" class="pill muted">0 calls</span>
+        </div>
+        <div id="tool-trace" class="trace-list empty-state">
+          Tool trace appears when AGENT_MODE is set to tool_agent.
+        </div>
+      </section>
+
+      <section class="panel tool-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Tool Registry Demo</h2>
+            <p>Call the same business tools exposed to FastAPI, evals, and MCP clients.</p>
+          </div>
+          <button id="call-tool" class="secondary-button">Call Tool</button>
+        </div>
+        <div class="tool-controls">
+          <label>
+            Tool
+            <select id="tool-select"></select>
+          </label>
+          <label>
+            Arguments JSON
+            <textarea id="tool-args" spellcheck="false">{ "customer_id": "C003" }</textarea>
+          </label>
+        </div>
+        <pre id="tool-output" class="json-output">{}</pre>
+      </section>
+
+      <section class="architecture-band">
+        <h2>Architecture Summary</h2>
+        <div class="architecture-grid">
+          <article>
+            <h3>RAG</h3>
+            <p>Retrieves company knowledge from policy and onboarding documents.</p>
+          </article>
+          <article>
+            <h3>Tool Registry</h3>
+            <p>Exposes CRM lookups, RAG search, draft generation, and demo tasks.</p>
+          </article>
+          <article>
+            <h3>LLM Providers</h3>
+            <p>Supports OpenAI now with a generic interface for Anthropic and Gemini.</p>
+          </article>
+          <article>
+            <h3>Pydantic</h3>
+            <p>Validates structured outputs before recommendations are accepted.</p>
+          </article>
+          <article>
+            <h3>Fallback</h3>
+            <p>Deterministic logic protects reliability when LLM output is unavailable.</p>
+          </article>
+          <article>
+            <h3>Evaluation</h3>
+            <p>Checks schema validity, evidence, intent, action type, and hallucinations.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/demo.js"></script>
+  </body>
+</html>

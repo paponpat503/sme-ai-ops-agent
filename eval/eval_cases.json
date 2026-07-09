@@ -1,0 +1,36 @@
+[
+  {
+    "id": "case_001",
+    "question": "Which customers need follow-up today?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": [
+      "ABC Fitness",
+      "Chao Phraya Logistics",
+      "Bright Coffee Retail"
+    ],
+    "must_not_include_customers": [
+      "North Star Academy"
+    ],
+    "required_action_types": [
+      "schedule_support_call",
+      "escalate_to_manager"
+    ]
+  },
+  {
+    "id": "case_002",
+    "question": "Which enterprise accounts are risky?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": [
+      "ABC Fitness",
+      "Chao Phraya Logistics"
+    ],
+    "must_not_include_customers": [
+      "Bright Coffee Retail",
+      "North Star Academy"
+    ],
+    "required_action_types": [
+      "schedule_support_call",
+      "escalate_to_manager"
+    ]
+  }
+]

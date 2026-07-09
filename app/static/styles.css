@@ -1,0 +1,397 @@
+:root {
+  color-scheme: dark;
+  --bg: #07111f;
+  --panel: #0d1b2e;
+  --panel-strong: #12243a;
+  --border: #213650;
+  --text: #e8eef7;
+  --muted: #9fb0c7;
+  --accent: #38bdf8;
+  --accent-strong: #0ea5e9;
+  --good: #34d399;
+  --warn: #f59e0b;
+  --critical: #fb7185;
+  --code: #06101d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #081425 0%, #07111f 42%, #0a1320 100%);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 34px 40px 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(7, 17, 31, 0.92);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 8px;
+  font-size: 40px;
+  line-height: 1.05;
+}
+
+h2 {
+  margin-bottom: 6px;
+  font-size: 20px;
+}
+
+h3 {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.subtitle,
+.section-heading p,
+.architecture-grid p {
+  color: var(--muted);
+}
+
+.subtitle {
+  margin-bottom: 0;
+  font-size: 16px;
+}
+
+.status-strip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 420px;
+}
+
+.status-strip span,
+.pill {
+  border: 1px solid var(--border);
+  background: rgba(18, 36, 58, 0.9);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 18px;
+  padding: 22px 40px 42px;
+}
+
+.panel,
+.architecture-band {
+  border: 1px solid var(--border);
+  background: rgba(13, 27, 46, 0.94);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+}
+
+.ask-panel,
+.response-panel,
+.trace-panel,
+.architecture-band {
+  grid-column: span 2;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+textarea,
+select {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--code);
+  color: var(--text);
+  border-radius: 6px;
+  font: inherit;
+}
+
+textarea {
+  min-height: 104px;
+  padding: 14px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+select {
+  height: 42px;
+  padding: 0 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  padding: 11px 15px;
+  color: #04111f;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.primary-button {
+  background: var(--accent);
+}
+
+.secondary-button {
+  background: #dbeafe;
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.metadata-grid div {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+dd {
+  margin: 0;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.risk-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.risk-card {
+  border: 1px solid var(--border);
+  background: var(--panel-strong);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.trace-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trace-card {
+  border: 1px solid var(--border);
+  background: var(--panel-strong);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.trace-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.trace-card pre {
+  max-height: 190px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--code);
+  color: #dbeafe;
+}
+
+.trace-reason,
+.trace-summary {
+  color: var(--muted);
+}
+
+.trace-error {
+  color: #fecdd3;
+}
+
+.risk-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.risk-card h3 {
+  font-size: 18px;
+}
+
+.risk-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.risk-meta span {
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.risk-critical {
+  color: var(--critical);
+}
+
+.risk-high {
+  color: var(--warn);
+}
+
+.risk-medium {
+  color: #facc15;
+}
+
+.risk-low {
+  color: var(--good);
+}
+
+.evidence-list {
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.draft {
+  border-left: 3px solid var(--accent-strong);
+  padding-left: 12px;
+  white-space: pre-wrap;
+}
+
+.tool-controls {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.json-output {
+  min-height: 220px;
+  margin: 16px 0 0;
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--code);
+  color: #dbeafe;
+}
+
+.architecture-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.architecture-grid article {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.empty-state,
+.error-box {
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.error-box {
+  margin-top: 12px;
+  color: #fecdd3;
+  border-color: rgba(251, 113, 133, 0.55);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+@media (max-width: 980px) {
+  .topbar,
+  .section-heading {
+    flex-direction: column;
+  }
+
+  .layout,
+  .risk-list,
+  .tool-controls,
+  .architecture-grid,
+  .metadata-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ask-panel,
+  .response-panel,
+  .trace-panel,
+  .architecture-band {
+    grid-column: span 1;
+  }
+
+  .trace-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar,
+  .layout {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+}

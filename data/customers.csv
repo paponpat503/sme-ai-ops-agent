@@ -1,0 +1,6 @@
+customer_id,customer_name,industry,plan,owner,health_score
+C001,ABC Fitness,Health & Wellness,Enterprise,Nadia,62
+C002,Bright Coffee Retail,Food & Beverage,Pro,Ken,81
+C003,Chao Phraya Logistics,Logistics,Enterprise,Mint,55
+C004,Siam Dental Group,Healthcare,Pro,Nadia,74
+C005,North Star Academy,Education,Basic,Ken,88

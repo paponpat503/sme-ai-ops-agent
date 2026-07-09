@@ -1,0 +1,7 @@
+note_id,customer_id,date,note
+N001,C001,2026-07-08,Customer said the checkout bug is blocking a paid campaign.
+N002,C001,2026-07-04,Finance team asked whether the overdue invoice can wait until bug resolution.
+N003,C003,2026-07-07,Operations manager is frustrated because lead sync failed twice this week.
+N004,C003,2026-07-05,Enterprise renewal discussion scheduled next month.
+N005,C002,2026-07-08,Customer asked for help improving outbound email templates.
+N006,C005,2026-07-06,No issues. Customer reported successful onboarding.
