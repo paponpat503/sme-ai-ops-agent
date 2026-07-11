@@ -7,6 +7,22 @@
 
 SME AI Ops Agent is a B2B AI automation prototype demonstrating RAG, tool calling, structured outputs, MCP, validation, deterministic fallback, and evaluation.
 
+## Live Demo
+
+- Dashboard: https://YOUR-RENDER-LINK.onrender.com/demo
+- API documentation: https://YOUR-RENDER-LINK.onrender.com/docs
+
+The public demo uses synthetic business data and remains usable without an LLM key through deterministic fallback.
+
+## Production and Interview Assets
+
+- [Production architecture](docs/PRODUCTION_ARCHITECTURE.md)
+- [Production runbook](docs/PRODUCTION_RUNBOOK.md)
+- [Interview demo script](docs/INTERVIEW_DEMO_SCRIPT.md)
+- [CV bullets](docs/CV_BULLETS.md)
+- [LinkedIn post](docs/LINKEDIN_POST.md)
+- [Screenshot checklist](docs/SCREENSHOT_CHECKLIST.md)
+
 It is designed as a portfolio-grade project for roles like **AI Prompt Engineer**, **LLM Automation Builder**, and **AI Product Engineer**.
 
 The goal is not to build another chatbot. The goal is to build an assistant that can:
@@ -51,7 +67,7 @@ sme_ai_ops_agent/
   data/              demo CRM, ticket, order, and note CSVs
   docs/              policy and onboarding knowledge base
   eval/              evaluation cases
-  mcp/               MCP server skeleton
+  mcp/               MCP stdio server used by the real client integration
   prompts/           structured-output prompt templates
   scripts/           demos, evals, and smoke tests
 ```
@@ -330,7 +346,7 @@ py mcp\server.py
 
 For Claude Desktop, Claude Code, or another MCP client, configure the command as `py` with arguments `mcp\server.py`, and use this repository as the working directory.
 
-Test the registry without an MCP client:
+Test a real MCP client/server stdio session:
 
 ```powershell
 py -m scripts.run_mcp_smoke_test
@@ -411,6 +427,11 @@ Render setup:
 - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - Environment variables:
   - `AGENT_MODE=auto` for deterministic fallback without requiring an API key.
+  - `TOOL_PLANNER=deterministic` and `TOOL_TRANSPORT=local` for the public demo.
+  - `APP_ENV=production` plus `APP_API_KEY` or a typed `APP_API_KEYS_JSON` identity map for protected APIs.
+  - `DATABASE_URL` and `RETRIEVER_MODE=hybrid` for tenant-scoped PostgreSQL/pgvector retrieval.
+  - `OTEL_EXPORTER_OTLP_ENDPOINT` only when exporting traces to an approved collector.
+  - `TRUST_PROXY_HEADERS=true` only behind a proxy that replaces inbound forwarding headers.
   - `LLM_PROVIDER=openai` if enabling OpenAI later.
   - `OPENAI_API_KEY` only in the deployment provider's secret manager, never committed.
 
@@ -419,6 +440,7 @@ Public demo notes:
 - The dashboard is available at `/demo`.
 - The default behavior works without secrets because deterministic fallback is enabled.
 - Live LLM mode is optional and should be enabled only with environment-managed secrets.
+- `RUN_LIVE_LLM_EVAL=1` is required before any live quality/cost evaluation can execute.
 
 ---
 
@@ -604,7 +626,7 @@ This repository is positioned for AI Prompt Engineer, LLM Automation Builder, an
 - Every customer recommendation includes evidence from tickets, orders, CRM notes, or policy retrieval.
 - LLM usage is optional: deterministic fallback keeps the workflow reliable when no key is configured.
 - Tool-agent mode shows the planning and execution trace behind a recommendation.
-- The same business tools are exposed through FastAPI, eval scripts, and the MCP server skeleton.
+- The same business tools are exposed through FastAPI, eval scripts, and a real MCP stdio client/server session.
 - The eval harness checks customer inclusion/exclusion, action types, evidence, drafts, and hallucinated names.
 
 ## LinkedIn screenshot ideas
@@ -621,8 +643,8 @@ This repository is positioned for AI Prompt Engineer, LLM Automation Builder, an
 
 1. Add real Anthropic / Gemini provider adapters.
 2. Connect the MCP server to Claude Desktop or Claude Code.
-3. Add LLM-generated tool plans with deterministic safety checks.
-4. Add vector database: Chroma, Qdrant, LanceDB, or pgvector.
-5. Add n8n workflow trigger.
-6. Add Slack / Gmail / CRM integrations.
-7. Add automated evaluation with LLM-as-judge plus deterministic checks.
+3. Add OIDC authentication in front of the existing tenant/role context.
+4. Connect an external OpenTelemetry collector and production dashboards.
+5. Add n8n workflow triggers with approval gates.
+6. Add sandboxed Slack / Gmail / CRM adapters.
+7. Calibrate an optional LLM-as-judge against human-reviewed examples.

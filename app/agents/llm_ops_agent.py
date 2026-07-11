@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,7 +10,7 @@ from app.agents.ops_agent import answer_with_deterministic_agent
 from app.agents.tool_agent import answer_with_tool_agent
 from app.llm.output_validation import AgentOutputError, parse_and_validate_agent_answer
 from app.llm.providers import get_llm_provider
-from app.rag.simple_rag import rag_index
+from app.rag.runtime import rag_runtime
 from app.schemas.models import AgentAnswer, AgentRunMetadata, ToolAgentTrace
 from app.tools.crm_tools import (
     load_crm_notes,
@@ -17,6 +18,9 @@ from app.tools.crm_tools import (
     load_orders,
     load_tickets,
 )
+from app.security.context import get_principal
+from app.observability import emit_event
+from app.telemetry import get_tracer
 
 PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompts" / "structured_output_prompt.md"
 SUPPORTED_AGENT_MODES = {"deterministic", "llm", "auto", "tool_agent"}
@@ -34,6 +38,39 @@ def answer_with_agent(question: str) -> AgentAnswer:
 
 
 def answer_with_agent_result(question: str) -> AgentRunResult:
+    started = time.perf_counter()
+    principal = get_principal()
+    with get_tracer().start_as_current_span("agent.run") as span:
+        span.set_attribute("tenant.id", principal.tenant_id)
+        span.set_attribute("request.id", principal.request_id)
+        result = _answer_with_agent_result(question)
+        latency_ms = round((time.perf_counter() - started) * 1000, 2)
+        metadata = result.metadata.model_copy(
+            update={
+                "request_id": principal.request_id,
+                "tenant_id": principal.tenant_id,
+                "latency_ms": latency_ms,
+            }
+        )
+        span.set_attribute("agent.mode", metadata.agent_mode)
+        span.set_attribute("agent.provider", metadata.provider_used)
+        span.set_attribute("agent.fallback", metadata.fallback_used)
+        span.set_attribute("agent.tool_calls", metadata.tool_calls_count)
+    emit_event(
+        "agent_run",
+        request_id=principal.request_id,
+        tenant_id=principal.tenant_id,
+        mode=metadata.agent_mode,
+        provider=metadata.provider_used,
+        fallback_used=metadata.fallback_used,
+        fallback_reason=metadata.fallback_reason,
+        latency_ms=latency_ms,
+        tool_calls=metadata.tool_calls_count,
+    )
+    return AgentRunResult(answer=result.answer, metadata=metadata, tool_trace=result.tool_trace)
+
+
+def _answer_with_agent_result(question: str) -> AgentRunResult:
     mode = _get_agent_mode()
     if mode == "deterministic":
         return _deterministic_result(question, mode)
@@ -73,6 +110,9 @@ def answer_with_agent_result(question: str) -> AgentRunResult:
                 provider_used=result.provider,
                 fallback_used=False,
                 validation_status="valid",
+                prompt_tokens=result.prompt_tokens,
+                completion_tokens=result.completion_tokens,
+                estimated_cost_usd=result.estimated_cost_usd,
             ),
         )
     except AgentOutputError as exc:
@@ -87,7 +127,7 @@ def answer_with_agent_result(question: str) -> AgentRunResult:
 
 def build_structured_output_prompt(question: str) -> str:
     template = PROMPT_PATH.read_text(encoding="utf-8")
-    hits = rag_index.search(question, top_k=3)
+    hits = rag_runtime.search(question, top_k=3)
     retrieved_context = [
         {
             "source": hit.source,
@@ -147,6 +187,7 @@ def _fallback_result(
             fallback_used=True,
             validation_status=validation_status,
             error=error,
+            fallback_reason=validation_status,
         ),
     )
 

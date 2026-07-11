@@ -24,7 +24,7 @@ EXPECTED_TOOLS = {
     "create_crm_task_demo",
 }
 
-def run_eval() -> None:
+def run_eval() -> bool:
     cases = json.loads(EVAL_PATH.read_text(encoding="utf-8"))
     valid_customer_names = set(load_customers()["customer_name"].astype(str))
     total = 0
@@ -57,6 +57,7 @@ def run_eval() -> None:
     print(f"\nOverall: {passed}/{total} agent cases passed")
     print(f"Tool registry: {'PASS' if registry_pass else 'FAIL'}")
     print(f"Tool agent: {'PASS' if tool_agent_pass else 'FAIL'}")
+    return passed == total and registry_pass and tool_agent_pass
 
 
 def _is_valid_schema(answer: AgentAnswer) -> bool:
@@ -130,4 +131,4 @@ def _run_tool_agent_eval(valid_customer_names: set[str]) -> bool:
 
 
 if __name__ == "__main__":
-    run_eval()
+    raise SystemExit(0 if run_eval() else 1)

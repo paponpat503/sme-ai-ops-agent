@@ -6,6 +6,8 @@ from typing import Protocol
 
 import httpx
 from dotenv import load_dotenv
+from app.config import get_settings
+from app.resilience import CircuitBreaker, CircuitOpenError, RetryPolicy, call_with_retry
 
 load_dotenv()
 
@@ -16,6 +18,12 @@ class LLMResult:
     text: str
     available: bool
     error: str | None = None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    estimated_cost_usd: float = 0.0
+
+
+_OPENAI_BREAKER = CircuitBreaker()
 
 
 class LLMProvider(Protocol):
@@ -109,7 +117,11 @@ class OpenAIProvider:
             "Content-Type": "application/json",
         }
 
-        try:
+        settings = get_settings()
+        _OPENAI_BREAKER.failure_threshold = settings.circuit_failure_threshold
+        _OPENAI_BREAKER.cooldown_seconds = settings.circuit_cooldown_seconds
+
+        def request() -> httpx.Response:
             with httpx.Client(timeout=self.timeout_seconds) as client:
                 response = client.post(
                     f"{self.base_url}/chat/completions",
@@ -117,6 +129,15 @@ class OpenAIProvider:
                     json=payload,
                 )
             response.raise_for_status()
+            return response
+
+        try:
+            response = call_with_retry(
+                request,
+                policy=RetryPolicy(max_retries=settings.provider_max_retries),
+                breaker=_OPENAI_BREAKER,
+                is_retryable=_is_retryable_http_error,
+            )
             data = response.json()
             text = data["choices"][0]["message"]["content"]
             if not text:
@@ -126,14 +147,36 @@ class OpenAIProvider:
                     available=False,
                     error="OpenAI returned an empty message.",
                 )
-            return LLMResult(provider=self.name, text=text, available=True)
-        except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
+            usage = data.get("usage", {})
+            prompt_tokens = int(usage.get("prompt_tokens", 0))
+            completion_tokens = int(usage.get("completion_tokens", 0))
+            return LLMResult(
+                provider=self.name,
+                text=text,
+                available=True,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                estimated_cost_usd=round(
+                    prompt_tokens * settings.llm_input_cost_per_million / 1_000_000
+                    + completion_tokens * settings.llm_output_cost_per_million / 1_000_000,
+                    8,
+                ),
+            )
+        except (httpx.HTTPError, CircuitOpenError, KeyError, IndexError, ValueError) as exc:
             return LLMResult(
                 provider=self.name,
                 text="",
                 available=False,
                 error=f"OpenAI request failed: {exc}",
             )
+
+
+def _is_retryable_http_error(exc: Exception) -> bool:
+    if isinstance(exc, httpx.TransportError):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code == 429 or exc.response.status_code >= 500
+    return False
 
 
 def get_llm_provider(provider_name: str | None = None) -> LLMProvider:

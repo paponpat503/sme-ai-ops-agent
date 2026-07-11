@@ -10,6 +10,10 @@ const metaFallback = document.querySelector("#meta-fallback");
 const metaValidation = document.querySelector("#meta-validation");
 const metaError = document.querySelector("#meta-error");
 const metaTools = document.querySelector("#meta-tools");
+const metaRequest = document.querySelector("#meta-request");
+const metaLatency = document.querySelector("#meta-latency");
+const metaTokens = document.querySelector("#meta-tokens");
+const metaTenant = document.querySelector("#meta-tenant");
 const traceCount = document.querySelector("#trace-count");
 const toolTraceEl = document.querySelector("#tool-trace");
 const toolSelect = document.querySelector("#tool-select");
@@ -83,6 +87,10 @@ function renderMetadata(metadata = {}) {
   metaError.textContent = metadata.error || "-";
   const tools = Array.isArray(metadata.tools_called) ? metadata.tools_called : [];
   metaTools.textContent = tools.length ? tools.join(", ") : "-";
+  metaRequest.textContent = metadata.request_id ?? "-";
+  metaTenant.textContent = metadata.tenant_id ?? "-";
+  metaLatency.textContent = `${metadata.latency_ms ?? 0} ms`;
+  metaTokens.textContent = `${metadata.prompt_tokens ?? 0} in / ${metadata.completion_tokens ?? 0} out`;
 }
 
 function renderAgentPayload(payload) {
@@ -122,7 +130,8 @@ function renderToolTrace(trace) {
   }
 
   toolTraceEl.className = "trace-list";
-  toolTraceEl.innerHTML = results.map((result, index) => {
+  const traceHeader = `<p class="trace-summary">planner: ${escapeHtml(trace.planner || "deterministic")} | transport: ${escapeHtml(trace.transport || "local")}</p>`;
+  toolTraceEl.innerHTML = traceHeader + results.map((result, index) => {
     const planned = plan[index] || {};
     const summary = summarizeToolResult(result.result);
     return `
@@ -132,7 +141,7 @@ function renderToolTrace(trace) {
           <strong class="${result.error ? "trace-error" : "risk-low"}">${result.error ? "error" : "ok"}</strong>
         </header>
         <p class="trace-reason">${escapeHtml(planned.reason || "No planning reason returned.")}</p>
-        <p class="trace-summary">${escapeHtml(summary)}</p>
+        <p class="trace-summary">${escapeHtml(summary)} (${escapeHtml(String(result.latency_ms ?? 0))} ms)</p>
         ${result.error ? `<p class="trace-error">${escapeHtml(result.error)}</p>` : ""}
         <h3>Arguments</h3>
         <pre>${escapeHtml(JSON.stringify(result.arguments || {}, null, 2))}</pre>

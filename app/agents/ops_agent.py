@@ -2,14 +2,12 @@ from __future__ import annotations
 from typing import List
 from app.schemas.models import AgentAnswer, CustomerAction
 from app.tools.crm_tools import load_customers, get_open_tickets, get_overdue_orders, get_recent_notes, draft_followup_email
-from app.rag.simple_rag import rag_index
+from app.rag.runtime import rag_runtime
 
 def answer_with_deterministic_agent(question: str) -> AgentAnswer:
     q = question.lower().strip()
-    if "follow" in q or "at risk" in q or "urgent" in q or "customer" in q or "enterprise" in q:
-        return _customers_need_followup(question)
     if "refund" in q or "policy" in q or "onboarding" in q:
-        hits = rag_index.search(question, top_k=3)
+        hits = rag_runtime.search(question, top_k=3)
         evidence = [f"{h.source}: {h.text[:220]}" for h in hits]
         return AgentAnswer(
             intent="knowledge_retrieval",
@@ -18,6 +16,8 @@ def answer_with_deterministic_agent(question: str) -> AgentAnswer:
             missing_information=[] if evidence else ["No relevant policy documents found."],
             confidence="high" if evidence else "low",
         )
+    if "follow" in q or "at risk" in q or "urgent" in q or "customer" in q or "enterprise" in q:
+        return _customers_need_followup(question)
     return AgentAnswer(
         intent="general_question",
         summary="I can help with customer follow-up, open tickets, overdue payments, CRM notes, and company knowledge retrieval.",

@@ -1,27 +1,20 @@
 from __future__ import annotations
-from pathlib import Path
 from typing import Dict, List, Any
 import pandas as pd
-
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
-
-def _read_csv(name: str) -> pd.DataFrame:
-    path = DATA_DIR / name
-    if not path.exists():
-        raise FileNotFoundError(f"Missing data file: {path}")
-    return pd.read_csv(path)
+from app.data.repositories import get_business_repository, records_as_frame
+from app.security.context import get_principal
 
 def load_customers() -> pd.DataFrame:
-    return _read_csv("customers.csv")
+    return records_as_frame("customers")
 
 def load_tickets() -> pd.DataFrame:
-    return _read_csv("tickets.csv")
+    return records_as_frame("tickets")
 
 def load_orders() -> pd.DataFrame:
-    return _read_csv("orders.csv")
+    return records_as_frame("orders")
 
 def load_crm_notes() -> pd.DataFrame:
-    return _read_csv("crm_notes.csv")
+    return records_as_frame("notes")
 
 def get_customer_profile(customer_id: str) -> Dict[str, Any]:
     customers = load_customers()
@@ -57,14 +50,24 @@ def get_recent_notes(customer_id: str | None = None, limit: int = 5) -> List[Dic
     notes = notes.sort_values("date", ascending=False).head(limit)
     return notes.to_dict(orient="records")
 
-def create_crm_task(customer_id: str, task: str, due_date: str, owner: str = "sales") -> Dict[str, Any]:
-    return {
-        "status": "created_demo_task",
-        "customer_id": customer_id,
-        "task": task,
-        "due_date": due_date,
-        "owner": owner,
-    }
+def create_crm_task(
+    customer_id: str,
+    task: str,
+    due_date: str,
+    owner: str = "sales",
+    idempotency_key: str | None = None,
+) -> Dict[str, Any]:
+    idempotency_key = idempotency_key or f"{customer_id}:{task}:{due_date}:{owner}"
+    return get_business_repository().create_task(
+        get_principal(),
+        {
+            "customer_id": customer_id,
+            "task": task,
+            "due_date": due_date,
+            "owner": owner,
+            "idempotency_key": idempotency_key,
+        },
+    )
 
 def draft_followup_email(customer_name: str, reason: str, action: str) -> str:
     return (

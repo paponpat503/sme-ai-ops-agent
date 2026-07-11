@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from app.tools.registry import TOOL_REGISTRY, call_registered_tool, list_registered_tools
-from rich import print_json
+import json
+import sys
+from pathlib import Path
+
+import anyio
+from app.tools.registry import list_registered_tools
 
 
 EXPECTED_TOOLS = {
@@ -16,27 +20,43 @@ EXPECTED_TOOLS = {
 }
 
 
-def run_smoke_test() -> None:
-    registered = set(TOOL_REGISTRY)
-    missing = sorted(EXPECTED_TOOLS - registered)
-    print(f"registered_tools: {len(registered)}")
-    print_json(data=list_registered_tools())
-    if missing:
-        raise SystemExit(f"Missing expected tools: {missing}")
+async def run_smoke_test() -> None:
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
 
-    open_tickets = call_registered_tool("get_open_tickets", {"customer_id": "C003"})
-    if open_tickets.error or not open_tickets.result:
-        raise SystemExit(f"get_open_tickets failed: {open_tickets.error}")
+    root = Path(__file__).resolve().parents[1]
+    params = StdioServerParameters(
+        command=sys.executable,
+        args=[str(root / "mcp" / "server.py")],
+        cwd=root,
+    )
+    async with stdio_client(params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            listed = await session.list_tools()
+            names = {tool.name for tool in listed.tools}
+            missing = EXPECTED_TOOLS - names
+            if missing:
+                raise SystemExit(f"MCP list_tools missing: {sorted(missing)}")
+            registry = {tool["name"]: tool for tool in list_registered_tools()}
+            for tool in listed.tools:
+                mcp_schema = tool.inputSchema
+                registry_schema = registry[tool.name]["input_schema"]
+                if set(mcp_schema.get("properties", {})) != set(registry_schema.get("properties", {})):
+                    raise SystemExit(f"MCP schema properties differ for {tool.name}")
+                if set(mcp_schema.get("required", [])) != set(registry_schema.get("required", [])):
+                    raise SystemExit(f"MCP required arguments differ for {tool.name}")
 
-    policy_hits = call_registered_tool("search_policy_docs", {"query": "refund policy", "top_k": 2})
-    if policy_hits.error or not policy_hits.result:
-        raise SystemExit(f"search_policy_docs failed: {policy_hits.error}")
-
-    print("get_open_tickets: PASS")
-    print_json(data=open_tickets.model_dump())
-    print("search_policy_docs: PASS")
-    print_json(data=policy_hits.model_dump())
+            tickets = await session.call_tool("get_open_tickets", {"customer_id": "C003"})
+            policy = await session.call_tool("search_policy_docs", {"query": "refund policy", "top_k": 2})
+            if tickets.isError or policy.isError:
+                raise SystemExit("MCP tool call returned an error.")
+            print(f"MCP initialize: PASS")
+            print(f"MCP list_tools ({len(names)}): PASS")
+            print("MCP registry schema parity: PASS")
+            print("MCP get_open_tickets: PASS")
+            print("MCP search_policy_docs: PASS")
 
 
 if __name__ == "__main__":
-    run_smoke_test()
+    anyio.run(run_smoke_test)

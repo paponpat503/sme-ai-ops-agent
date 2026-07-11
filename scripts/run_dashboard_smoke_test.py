@@ -23,6 +23,9 @@ def run_smoke_test() -> None:
     demo = client.get("/demo")
     _assert(demo.status_code == 200, f"/demo returned {demo.status_code}")
     _assert("SME AI Ops Agent" in demo.text, "/demo did not include dashboard title")
+    _assert('id="meta-request"' in demo.text, "/demo missing request metadata")
+    _assert('id="meta-latency"' in demo.text, "/demo missing latency metadata")
+    _assert('id="meta-tokens"' in demo.text, "/demo missing token metadata")
 
     tools = client.get("/tools/list")
     _assert(tools.status_code == 200, f"/tools/list returned {tools.status_code}")
@@ -34,6 +37,8 @@ def run_smoke_test() -> None:
     payload = agent.json()
     _assert("answer" in payload, "/agent/ask missing answer wrapper")
     _assert("metadata" in payload, "/agent/ask missing metadata wrapper")
+    _assert(payload["metadata"]["request_id"], "/agent/ask missing request_id")
+    _assert(payload["metadata"]["latency_ms"] >= 0, "/agent/ask missing latency")
     _assert(payload["answer"]["actions"], "/agent/ask returned no customer actions")
 
     print("/demo: PASS")

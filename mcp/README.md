@@ -1,6 +1,6 @@
 # MCP Server
 
-This folder contains a minimal Model Context Protocol server for the SME AI Ops Agent.
+This folder contains the Model Context Protocol stdio server for the SME AI Ops Agent.
 
 MCP lets AI clients call local business tools instead of guessing business facts from the prompt. In this project, the server exposes the same CRM and RAG functions used by the FastAPI app and deterministic agent.
 
@@ -37,13 +37,13 @@ py mcp\server.py
 
 ## Local Smoke Test
 
-The smoke test calls the registry directly, so it works even if an MCP client is not configured yet:
+The smoke test starts this server as a subprocess, initializes a real MCP client session, discovers tools, and invokes CRM and policy tools through the protocol:
 
 ```powershell
 py -m scripts.run_mcp_smoke_test
 ```
 
-## Client Configuration Later
+## Client Configuration
 
 For Claude Desktop, Claude Code, or another MCP-compatible client, point the client command to:
 

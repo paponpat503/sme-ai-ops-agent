@@ -6,3 +6,6 @@ __pycache__/
 *.sqlite
 .coverage
 .pytest_cache/
+
+# Local installers
+*.exe

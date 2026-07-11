@@ -32,5 +32,109 @@
       "schedule_support_call",
       "escalate_to_manager"
     ]
+  },
+  {
+    "id": "case_003",
+    "question": "What is the annual subscription refund policy?",
+    "expected_intent": "knowledge_retrieval",
+    "must_include_customers": [],
+    "must_not_include_customers": [],
+    "required_action_types": []
+  },
+  {
+    "id": "case_004",
+    "question": "How does the onboarding playbook define success?",
+    "expected_intent": "knowledge_retrieval",
+    "must_include_customers": [],
+    "must_not_include_customers": [],
+    "required_action_types": []
+  },
+  {
+    "id": "case_005",
+    "question": "Which customers are urgent?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": ["ABC Fitness", "Chao Phraya Logistics"],
+    "must_not_include_customers": ["North Star Academy"],
+    "required_action_types": ["escalate_to_manager"]
+  },
+  {
+    "id": "case_006",
+    "question": "Which enterprise customers need follow-up?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": ["ABC Fitness", "Chao Phraya Logistics"],
+    "must_not_include_customers": ["Bright Coffee Retail", "North Star Academy"],
+    "required_action_types": ["schedule_support_call", "escalate_to_manager"]
+  },
+  {
+    "id": "case_007",
+    "question": "Explain the company escalation policy.",
+    "expected_intent": "knowledge_retrieval",
+    "must_include_customers": [],
+    "must_not_include_customers": [],
+    "required_action_types": []
+  },
+  {
+    "id": "case_008",
+    "question": "Which customer accounts are at risk?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": ["ABC Fitness", "Chao Phraya Logistics", "Bright Coffee Retail"],
+    "must_not_include_customers": ["North Star Academy"],
+    "required_action_types": ["escalate_to_manager"]
+  },
+  {
+    "id": "case_009",
+    "question": "Which customers should we follow up with urgently?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": ["ABC Fitness", "Chao Phraya Logistics"],
+    "must_not_include_customers": ["North Star Academy"],
+    "required_action_types": ["escalate_to_manager"]
+  },
+  {
+    "id": "case_010",
+    "question": "Which enterprise customers are at risk today?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": ["ABC Fitness", "Chao Phraya Logistics"],
+    "must_not_include_customers": ["Bright Coffee Retail"],
+    "required_action_types": ["schedule_support_call", "escalate_to_manager"]
+  },
+  {
+    "id": "case_011",
+    "question": "Explain the enterprise refund policy.",
+    "expected_intent": "knowledge_retrieval",
+    "must_include_customers": [],
+    "must_not_include_customers": [],
+    "required_action_types": []
+  },
+  {
+    "id": "case_012",
+    "question": "What checks are required before production use during onboarding?",
+    "expected_intent": "knowledge_retrieval",
+    "must_include_customers": [],
+    "must_not_include_customers": [],
+    "required_action_types": []
+  },
+  {
+    "id": "case_013",
+    "question": "Which customer accounts need a support call?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": ["ABC Fitness", "Chao Phraya Logistics"],
+    "must_not_include_customers": ["North Star Academy"],
+    "required_action_types": ["schedule_support_call"]
+  },
+  {
+    "id": "case_014",
+    "question": "Which customers have urgent account issues?",
+    "expected_intent": "customer_followup_prioritization",
+    "must_include_customers": ["ABC Fitness", "Chao Phraya Logistics"],
+    "must_not_include_customers": ["North Star Academy"],
+    "required_action_types": ["escalate_to_manager"]
+  },
+  {
+    "id": "case_015",
+    "question": "What is the policy for high-risk customer follow-up?",
+    "expected_intent": "knowledge_retrieval",
+    "must_include_customers": [],
+    "must_not_include_customers": [],
+    "required_action_types": []
   }
 ]

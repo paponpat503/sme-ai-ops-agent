@@ -2,14 +2,22 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+import os
+import time
 from typing import Any
 
 from app.agents.ops_agent import answer_with_deterministic_agent
 from app.agents.tool_planner import plan_tool_calls
+from app.agents.llm_tool_planner import generate_tool_plan
+from app.agents.plan_validation import ToolPlanError
+from app.config import get_settings
+from app.llm.providers import get_llm_provider
 from app.llm.output_validation import AgentOutputError, validate_grounding
 from app.schemas.models import AgentAnswer, CustomerAction, ToolAgentTrace, ToolCallResult
 from app.tools.crm_tools import draft_followup_email
-from app.tools.registry import call_registered_tool
+from app.security.context import get_principal
+from app.tools.transport import get_tool_transport
+from app.telemetry import get_tracer
 
 
 @dataclass(frozen=True)
@@ -21,13 +29,31 @@ class ToolAgentResult:
 
 
 def answer_with_tool_agent(question: str) -> ToolAgentResult:
-    plan = plan_tool_calls(question)
-    results = [_execute_plan_item(item) for item in plan]
-    trace = ToolAgentTrace(plan=plan, results=results)
+    principal = get_principal()
+    planner = "deterministic"
+    planning_error: str | None = None
+    if os.getenv("TOOL_PLANNER", "deterministic").strip().lower() == "llm":
+        try:
+            plan = generate_tool_plan(question, get_llm_provider(), principal).calls
+            planner = "llm"
+        except ToolPlanError as exc:
+            plan = plan_tool_calls(question)
+            planning_error = str(exc)
+    else:
+        plan = plan_tool_calls(question)
+
+    transport = get_tool_transport(get_settings().tool_transport)
+    results = [_execute_plan_item(item, transport, principal) for item in plan]
+    trace = ToolAgentTrace(plan=plan, results=results, planner=planner, transport=transport.name)
     try:
         answer = _synthesize_answer(question, trace)
         validate_grounding(answer)
-        return ToolAgentResult(answer=answer, trace=trace, fallback_used=False)
+        return ToolAgentResult(
+            answer=answer,
+            trace=trace,
+            fallback_used=planning_error is not None,
+            error=planning_error,
+        )
     except (AgentOutputError, ValueError, TypeError, KeyError) as exc:
         return ToolAgentResult(
             answer=answer_with_deterministic_agent(question),
@@ -37,13 +63,22 @@ def answer_with_tool_agent(question: str) -> ToolAgentResult:
         )
 
 
-def _execute_plan_item(plan_item: Any) -> ToolCallResult:
-    response = call_registered_tool(plan_item.tool_name, plan_item.arguments)
+def _execute_plan_item(plan_item: Any, transport: Any, principal: Any) -> ToolCallResult:
+    started = time.perf_counter()
+    with get_tracer().start_as_current_span("tool.execute") as span:
+        span.set_attribute("tool.name", plan_item.tool_name)
+        span.set_attribute("tool.transport", transport.name)
+        span.set_attribute("tenant.id", principal.tenant_id)
+        response = transport.call(plan_item.tool_name, plan_item.arguments, principal)
+        span.set_attribute("tool.error", bool(response.error))
     return ToolCallResult(
         tool_name=plan_item.tool_name,
         arguments=plan_item.arguments,
         result=response.result,
         error=response.error,
+        error_code=response.error_code,
+        latency_ms=round((time.perf_counter() - started) * 1000, 2),
+        validation_status="execution_error" if response.error else "valid",
     )
 
 

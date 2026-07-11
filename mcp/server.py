@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 from typing import Any
 
@@ -14,10 +15,20 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from app.tools.registry import call_registered_tool
+from app.security.context import PrincipalContext
+
+
+def _mcp_principal() -> PrincipalContext:
+    return PrincipalContext(
+        tenant_id=os.getenv("MCP_TENANT_ID", "demo"),
+        user_id=os.getenv("MCP_USER_ID", "mcp-client"),
+        roles=frozenset(role for role in os.getenv("MCP_ROLES", "operator").split(",") if role),
+        request_id=os.getenv("MCP_REQUEST_ID", "mcp-local"),
+    )
 
 
 def _result_or_raise(tool_name: str, arguments: dict[str, Any]) -> Any:
-    response = call_registered_tool(tool_name, arguments)
+    response = call_registered_tool(tool_name, arguments, _mcp_principal())
     if response.error:
         raise ValueError(response.error)
     return response.result
@@ -73,11 +84,12 @@ def create_mcp_server() -> Any:
         task: str,
         due_date: str,
         owner: str = "sales",
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Create a demo CRM task payload without writing to a real CRM."""
         return _result_or_raise(
             "create_crm_task_demo",
-            {"customer_id": customer_id, "task": task, "due_date": due_date, "owner": owner},
+            {"customer_id": customer_id, "task": task, "due_date": due_date, "owner": owner, "idempotency_key": idempotency_key},
         )
 
     return server
